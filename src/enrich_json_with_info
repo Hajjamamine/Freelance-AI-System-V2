@@ -1,0 +1,83 @@
+import os
+import json
+import mysql.connector
+import logging
+from pathlib import Path
+
+# Setup logging
+LOGS_DIR = Path("logs")
+LOGS_DIR.mkdir(parents=True, exist_ok=True)
+log_file = LOGS_DIR / "enrich_json.log"
+logging.basicConfig(
+    filename=log_file,
+    level=logging.INFO,
+    format="%(asctime)s [%(levelname)s] %(message)s",
+)
+
+# Database configuration
+db_config = {
+    "host": "localhost",
+    "user": "root",
+    "password": "amine",
+    "database": "c1924754c_nls",
+    "port": 3306
+}
+
+# Paths
+FINAL_JSON_DIR = Path("data/final_json")
+ENRICHED_JSON_DIR = Path("data/enriched_json")
+ENRICHED_JSON_DIR.mkdir(parents=True, exist_ok=True)
+
+def get_freelancer_by_email(email):
+    try:
+        connection = mysql.connector.connect(**db_config)
+        cursor = connection.cursor(dictionary=True, buffered=True)  # <-- Add buffered=True
+        query = "SELECT idFreelancer, fName, lName FROM `nl-freelancer` WHERE email = %s"
+        cursor.execute(query, (email,))
+        result = cursor.fetchone()
+        return result
+    except mysql.connector.Error as e:
+        logging.error(f"MySQL error: {e}")
+        return None
+    finally:
+        if 'cursor' in locals(): cursor.close()
+        if 'connection' in locals(): connection.close()
+
+def main():
+    logging.info("🔍 Starting enrichment process...")
+
+    for json_file in FINAL_JSON_DIR.glob("*.json"):
+        with open(json_file, "r", encoding="utf-8") as f:
+            data = json.load(f)
+
+        email = data.get("email")
+        if not email:
+            logging.warning(f"❌ Skipped {json_file.name}: No email field found.")
+            continue
+
+        freelancer_info = get_freelancer_by_email(email)
+        if freelancer_info:
+            data.update(freelancer_info)
+            logging.info(f"✅ Enriched {json_file.name} with DB info.")
+        else:
+            logging.warning(f"⚠️ No DB match for email '{email}' in {json_file.name}.")
+
+        # Save enriched or unchanged JSON in the desired order
+        ordered_data = {
+            "idFreelancer": data.get("idFreelancer"),
+            "fName": data.get("fName"),
+            "lName": data.get("lName"),
+            "email": data.get("email"),
+            "phone": data.get("phone"),
+            "skills": data.get("skills", []),
+            "top_keywords": data.get("top_keywords", [])
+        }
+
+        output_path = ENRICHED_JSON_DIR / json_file.name
+        with open(output_path, "w", encoding="utf-8") as f:
+            json.dump(ordered_data, f, ensure_ascii=False, indent=2)
+
+    logging.info("🏁 Enrichment process complete.")
+
+if __name__ == "__main__":
+    main()
