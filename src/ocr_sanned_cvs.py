@@ -1,3 +1,30 @@
+"""
+Script: ocr_sanned_cvs.py
+
+Purpose:
+    - Extracts text from scanned CV files (PDFs and images) in the 'data/scanned_cvs' directory using OCR.
+    - Saves the extracted text as .txt files in the 'data/scanned_cvs_text' directory.
+
+Key Features:
+    - Uses pytesseract (Tesseract OCR) to extract text from images and PDF pages.
+    - Converts PDF pages to images before applying OCR.
+    - Handles common image formats (.jpg, .jpeg, .png) and PDF files.
+    - Creates the output directory if it does not exist.
+    - Prints a message for each file indicating success or if no text was found.
+
+Dependencies:
+    - pytesseract
+    - pdf2image
+    - Pillow (PIL)
+    - pathlib
+    - os
+
+Usage:
+    - Place scanned CV files (PDF or image) in the 'data/scanned_cvs' directory.
+    - (Optional) Set the path to the Tesseract executable if not in PATH.
+    - Run this script to extract text into 'data/scanned_cvs_text'.
+"""
+
 import os
 from pathlib import Path
 from PIL import Image

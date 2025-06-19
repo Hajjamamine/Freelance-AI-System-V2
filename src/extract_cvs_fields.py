@@ -9,7 +9,7 @@ Key Features:
     - Uses regular expressions to find Gmail addresses and Moroccan phone numbers.
     - Matches a predefined list of skill keywords in the CV text.
     - Uses spaCy for tokenization and keyword extraction, ignoring stop words and punctuation.
-    - Outputs structured JSON files for each CV in the 'data/structured_json' directory.
+    - Outputs structured JSON files for each CV in the 'data/structured_json_from_text' directory.
 
 Dependencies:
     - spaCy (with 'en_core_web_sm' model)
@@ -20,7 +20,7 @@ Dependencies:
 
 Usage:
     - Place plain text CVs in the 'data/processed_texts' directory.
-    - Run this script to generate structured JSON files in 'data/structured_json'.
+    - Run this script to generate structured JSON files in 'data/structured_json_from_text'.
 """
 
 import os
@@ -35,7 +35,7 @@ nlp = spacy.load("en_core_web_sm")
 # Paths
 BASE_DIR = Path(__file__).resolve().parents[1]
 INPUT_DIR = BASE_DIR / "data" / "processed_texts"
-OUTPUT_DIR = BASE_DIR / "data" / "structured_json"
+OUTPUT_DIR = BASE_DIR / "data" / "structured_json_from_text_from_text"
 OUTPUT_DIR.mkdir(parents=True, exist_ok=True)
 
 # Patterns
