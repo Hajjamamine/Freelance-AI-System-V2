@@ -2,7 +2,7 @@
 Script: enrich_json_with_info.py
 
 Purpose:
-    - Enriches JSON files in the 'data/final_json' directory with additional freelancer information from a MySQL database.
+    - Enriches JSON files in the 'data/json_fields' directory with additional freelancer information from a MySQL database.
     - Looks up freelancer details (idFreelancer, fName, lName) by email.
     - Outputs the enriched JSON files in the 'data/enriched_json' directory, preserving a specific field order.
 
@@ -10,7 +10,7 @@ Key Features:
     - Connects to a MySQL database using provided credentials.
     - Logs the enrichment process and any issues to 'logs/enrich_json.log'.
     - Skips JSON files without an email field.
-    - Ensures output JSON files have fields in a consistent order.
+    - Ensures output JSON files have fields in a consistent order, including is_ingenieur and is_technicien.
 
 Dependencies:
     - mysql-connector-python
@@ -20,7 +20,7 @@ Dependencies:
     - os
 
 Usage:
-    - Run this script after preparing your 'final_json' directory to add database info to each JSON file.
+    - Run this script after preparing your 'json_fields' directory to add database info to each JSON file.
 """
 
 import os
@@ -49,14 +49,14 @@ db_config = {
 }
 
 # Paths
-FINAL_JSON_DIR = Path("data/final_json")
+FINAL_JSON_DIR = Path("data/json_fields")
 ENRICHED_JSON_DIR = Path("data/enriched_json")
 ENRICHED_JSON_DIR.mkdir(parents=True, exist_ok=True)
 
 def get_freelancer_by_email(email):
     try:
         connection = mysql.connector.connect(**db_config)
-        cursor = connection.cursor(dictionary=True, buffered=True)  # <-- Add buffered=True
+        cursor = connection.cursor(dictionary=True, buffered=True)
         query = "SELECT idFreelancer, fName, lName FROM `nl-freelancer` WHERE email = %s"
         cursor.execute(query, (email,))
         result = cursor.fetchone()
@@ -87,7 +87,7 @@ def main():
         else:
             logging.warning(f"⚠️ No DB match for email '{email}' in {json_file.name}.")
 
-        # Save enriched or unchanged JSON in the desired order
+        # Save enriched or unchanged JSON in the desired order, including is_ingenieur and is_technicien
         ordered_data = {
             "idFreelancer": data.get("idFreelancer"),
             "fName": data.get("fName"),
@@ -95,7 +95,9 @@ def main():
             "email": data.get("email"),
             "phone": data.get("phone"),
             "skills": data.get("skills", []),
-            "top_keywords": data.get("top_keywords", [])
+            "top_keywords": data.get("top_keywords", []),
+            "is_ingenieur": data.get("is_ingenieur", 0),
+            "is_technicien": data.get("is_technicien", 0)
         }
 
         output_path = ENRICHED_JSON_DIR / json_file.name
