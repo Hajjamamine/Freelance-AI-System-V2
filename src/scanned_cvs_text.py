@@ -1,3 +1,28 @@
+"""
+Script: scanned_cvs_text.py
+
+Purpose:
+    - Extracts structured information from scanned CV text files in the 'data/scanned_cvs_text' directory.
+    - Identifies and extracts Gmail addresses, Moroccan phone numbers, skills, and top keywords from each CV.
+
+Key Features:
+    - Uses regular expressions to find Gmail addresses and Moroccan phone numbers.
+    - Matches a predefined list of skill keywords in the CV text.
+    - Tokenizes and counts frequent words to extract top keywords.
+    - Outputs structured JSON files for each CV in the 'data/structured_json_scanned' directory.
+
+Dependencies:
+    - re
+    - json
+    - pathlib
+    - collections.Counter
+    - string
+
+Usage:
+    - Place scanned CV text files in the 'data/scanned_cvs_text' directory.
+    - Run this script to generate structured JSON files in 'data/structured_json_scanned'.
+"""
+
 import re
 import json
 from pathlib import Path

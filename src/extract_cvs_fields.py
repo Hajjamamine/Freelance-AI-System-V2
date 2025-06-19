@@ -1,3 +1,28 @@
+"""
+Script: extract_cvs_fields.py
+
+Purpose:
+    - Extracts structured information from plain text CV files in the 'data/processed_texts' directory.
+    - Identifies and extracts email, Moroccan phone numbers, skills, and top keywords from each CV.
+
+Key Features:
+    - Uses regular expressions to find Gmail addresses and Moroccan phone numbers.
+    - Matches a predefined list of skill keywords in the CV text.
+    - Uses spaCy for tokenization and keyword extraction, ignoring stop words and punctuation.
+    - Outputs structured JSON files for each CV in the 'data/structured_json' directory.
+
+Dependencies:
+    - spaCy (with 'en_core_web_sm' model)
+    - pathlib
+    - json
+    - re
+    - collections.Counter
+
+Usage:
+    - Place plain text CVs in the 'data/processed_texts' directory.
+    - Run this script to generate structured JSON files in 'data/structured_json'.
+"""
+
 import os
 import re
 import json

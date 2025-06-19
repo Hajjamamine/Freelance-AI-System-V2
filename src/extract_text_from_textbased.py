@@ -1,3 +1,27 @@
+"""
+Script: extract_text_from_textbased.py
+
+Purpose:
+    - Extracts text from one-page, text-based PDF CVs in the 'data/clean_text_cvs' directory.
+    - Saves the extracted text as .txt files in the 'data/processed_texts' directory.
+    - Logs the extraction process and any issues to 'logs/extract_text.log'.
+
+Key Features:
+    - Uses PyMuPDF (fitz) to extract text from the first page of each PDF.
+    - Creates output and log directories if they do not exist.
+    - Logs successful extractions, warnings for empty files, and errors.
+
+Dependencies:
+    - PyMuPDF (fitz)
+    - os
+    - logging
+    - datetime
+
+Usage:
+    - Place clean, text-based PDF CVs in the 'data/clean_text_cvs' directory.
+    - Run this script to extract their text into 'data/processed_texts'.
+"""
+
 import os
 import fitz  # PyMuPDF
 import logging

@@ -1,3 +1,23 @@
+"""
+Script: merging.py
+
+Purpose:
+    - Merges JSON files from 'structured_json_from_text' and 'structured_json_scanned' directories
+      into a single 'final_json' directory.
+
+Key Features:
+    - Copies all JSON files from both source directories to the target directory.
+    - Automatically renames files if there are naming conflicts to avoid overwriting.
+    - Creates the 'final_json' directory if it does not exist.
+
+Dependencies:
+    - shutil
+    - pathlib
+
+Usage:
+    - Run this script to consolidate all structured JSON files into 'final_json'.
+"""
+
 import shutil
 from pathlib import Path
 
