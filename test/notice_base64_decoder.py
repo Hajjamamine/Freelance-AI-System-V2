@@ -1,0 +1,10 @@
+import base64
+
+# The base64-encoded notice
+encoded_notice = "aWwgZXN0IHF1ZWxxdeKAmXVuIGRlIHByb2Zlc3Npb25uZWwsIGlsIMOpY291dGUgYmllbiBjZSBxdWUgbGUgY2xpZW50IHZldXgsIGlsIGZhaXQgdml0ZSAsIGV0IGF1c3NpIGlsIGFjY2VwdGUgbOKAmWF2aXMgZHUgY2xpZW50LCBqZSBzdWlzIHRyw6hzIHNhdGlzZmFpdGUgZGUgdHJhdmFpbGxlciBhdmVjIGx1aSA="
+
+# Decode from base64
+decoded_bytes = base64.b64decode(encoded_notice)
+decoded_notice = decoded_bytes.decode("utf-8")
+
+print(decoded_notice)
