@@ -30,6 +30,7 @@ from pathlib import Path
 from PIL import Image
 import pytesseract
 from pdf2image import convert_from_path
+import unicodedata
 
 # Paths
 BASE_DIR = Path(__file__).resolve().parents[1]
@@ -44,10 +45,20 @@ def extract_text_from_image(image_path):
     return pytesseract.image_to_string(Image.open(image_path))
 
 def extract_text_from_pdf(pdf_path):
-    images = convert_from_path(pdf_path)
-    text = ""
-    for img in images:
-        text += pytesseract.image_to_string(img)
+    try:
+        images = convert_from_path(pdf_path)
+        text = ""
+        for img in images:
+            text += pytesseract.image_to_string(img)
+        return text
+    except Exception as e:
+        print(f"[!] Error processing PDF '{pdf_path}': {e}")
+        return None
+
+def normalize_text(text):
+    text = text.lower().strip()
+    text = unicodedata.normalize('NFKD', text)
+    text = ''.join([c for c in text if not unicodedata.combining(c)])
     return text
 
 def main():
@@ -57,12 +68,14 @@ def main():
             text = extract_text_from_image(file)
         elif file.suffix.lower() == ".pdf":
             text = extract_text_from_pdf(file)
-
-        if text.strip():
+            if text is None:
+                continue  # Skip corrupted/unreadable PDFs
+        if text and text.strip():
+            norm_text = normalize_text(text)
             output_file = OUTPUT_DIR / (file.stem + ".txt")
             with open(output_file, "w", encoding="utf-8") as f:
-                f.write(text)
-            print(f"[✓] Text extracted: {file.name}")
+                f.write(norm_text)
+            print(f"[✓] Text extracted and normalized: {file.name}")
         else:
             print(f"[!] No text found: {file.name}")
 

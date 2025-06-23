@@ -16,6 +16,7 @@ Dependencies:
     - os
     - logging
     - datetime
+    - unicodedata
 
 Usage:
     - Place clean, text-based PDF CVs in the 'data/clean_text_cvs' directory.
@@ -26,6 +27,7 @@ import os
 import fitz  # PyMuPDF
 import logging
 from datetime import datetime
+import unicodedata
 
 # Define paths
 CLEAN_CVS_DIR = r"C:\Users\PC\Desktop\Nsayblik_Internship\Freelancer-AI-system\data\clean_text_cvs"
@@ -43,22 +45,32 @@ logging.basicConfig(
     format="%(asctime)s [%(levelname)s] %(message)s"
 )
 
+def normalize_text(text):
+    """Normalize the extracted text by lowercasing, removing accents, and stripping whitespace."""
+    text = text.lower().strip()
+    text = unicodedata.normalize('NFKD', text)
+    text = ''.join([c for c in text if not unicodedata.combining(c)])
+    return text
+
 def extract_text_from_pdf(pdf_path, output_txt_path):
+    """Extract text from a PDF file, normalize it, and save it to a .txt file."""
     try:
         doc = fitz.open(pdf_path)
         text = doc[0].get_text().strip()
         doc.close()
 
         if text:
+            norm_text = normalize_text(text)
             with open(output_txt_path, 'w', encoding='utf-8') as f:
-                f.write(text)
-            logging.info(f"{os.path.basename(pdf_path)}: Text extracted successfully.")
+                f.write(norm_text)
+            logging.info(f"{os.path.basename(pdf_path)}: Text extracted and normalized successfully.")
         else:
             logging.warning(f"{os.path.basename(pdf_path)}: No text found.")
     except Exception as e:
         logging.error(f"{os.path.basename(pdf_path)}: Error - {str(e)}")
 
 def process_all_text_based_cvs():
+    """Process all PDF CVs in the directory: extract and normalize text."""
     logging.info(f"==== TEXT EXTRACTION STARTED: {datetime.now()} ====")
     for filename in os.listdir(CLEAN_CVS_DIR):
         if filename.lower().endswith('.pdf'):

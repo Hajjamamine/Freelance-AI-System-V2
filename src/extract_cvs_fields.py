@@ -5,6 +5,7 @@ import logging
 from collections import Counter
 from pathlib import Path
 import spacy
+import unicodedata
 
 # Load spaCy model
 nlp = spacy.load("en_core_web_sm")
@@ -142,6 +143,17 @@ SKILL_KEYWORDS = {
 }
 SKILL_KEYWORDS = {skill.lower() for skill in SKILL_KEYWORDS}
 
+# Normalization function
+def normalize_text(text):
+    """Lowercase, remove accents, and strip whitespace from text."""
+    text = text.lower().strip()
+    text = unicodedata.normalize('NFKD', text)
+    text = ''.join([c for c in text if not unicodedata.combining(c)])
+    return text
+
+# Normalize SKILL_KEYWORDS for robust matching
+NORMALIZED_SKILL_KEYWORDS = {normalize_text(skill) for skill in SKILL_KEYWORDS}
+
 # Job role keywords
 INGENIEUR_KEYWORDS = {"ingénieur", "ingenieur", "engineer", "engineering"}
 TECHNICIEN_KEYWORDS = {"technicien", "technician", "technicienne", "tech"}
@@ -150,6 +162,7 @@ TECHNICIEN_KEYWORDS = {"technicien", "technician", "technicienne", "tech"}
 def extract_fields(text, top_n_keywords=10):
     doc = nlp(text.lower())
     text_lower = text.lower()
+    norm_text = normalize_text(text)
 
     result = {
         "email": None,
@@ -170,23 +183,28 @@ def extract_fields(text, top_n_keywords=10):
     if phone_match:
         result["phone"] = phone_match.group()
 
-    # Skills (case-insensitive match)
-    matched_skills = []
-    for skill in SKILL_KEYWORDS:
-        if skill in text_lower:
-            matched_skills.append(skill)
-    result["skills"] = matched_skills
+    # Skills (normalized, token-based match)
+    matched_skills = set()
+    tokens = [normalize_text(token.text) for token in doc if token.is_alpha and not token.is_stop]
+    for token in tokens:
+        if token in NORMALIZED_SKILL_KEYWORDS:
+            matched_skills.add(token)
+    # Also check for multi-word skills (n-grams)
+    for skill in NORMALIZED_SKILL_KEYWORDS:
+        if ' ' in skill and skill in norm_text:
+            matched_skills.add(skill)
+    result["skills"] = sorted(matched_skills)
 
     # Job role detection using lemmatization
-    ingenieur_keywords = {"ingenieur", "ingénieur", "engineering", "engineer", "ingénierie"}
-    technicien_keywords = {"technicien", "technician", "technicienne", "tech"}
+    ingenieur_keywords = {normalize_text(k) for k in ["ingenieur", "ingénieur", "engineering", "engineer", "ingénierie"]}
+    technicien_keywords = {normalize_text(k) for k in ["technicien", "technician", "technicienne", "tech"]}
 
     ingenieur_count = 0
     technicien_count = 0
 
     for token in doc:
         if token.is_alpha and not token.is_stop:
-            lemma = token.lemma_.lower()
+            lemma = normalize_text(token.lemma_)
             if lemma in ingenieur_keywords:
                 ingenieur_count += 1
             elif lemma in technicien_keywords:
@@ -206,9 +224,8 @@ def extract_fields(text, top_n_keywords=10):
         result["is_ingenieur"] = 1
         result["is_technicien"] = 1
 
-    # Top keywords: most frequent from skills list
-    all_tokens = [token.lemma_.lower() for token in doc if token.is_alpha and not token.is_stop and len(token.text) > 2]
-    skill_token_counts = Counter([token for token in all_tokens if token in SKILL_KEYWORDS])
+    # Top keywords: most frequent from normalized skills list
+    skill_token_counts = Counter([token for token in tokens if token in NORMALIZED_SKILL_KEYWORDS])
     result["top_keywords"] = [word for word, _ in skill_token_counts.most_common(top_n_keywords)]
 
     return result
