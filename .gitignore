@@ -2,3 +2,4 @@
 data/
 #logs/
 requirements.txt
+myenv/
