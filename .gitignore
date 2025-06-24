@@ -1,3 +1,4 @@
 # Ignore everything inside data/ and logs/
 data/
 #logs/
+requirements.txt
