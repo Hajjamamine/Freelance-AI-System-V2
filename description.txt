@@ -11,8 +11,8 @@ Freelancer-AI-system/
 │   ├── raw_cvs/                # All original CVs (PDFs, scanned or text-based)
 │   ├── clean_text_cvs/         # One-page, text-based PDFs (filtered)
 │   ├── scanned_cvs/            # Scanned CVs (PDFs/images, flagged as scanned)
-│   ├── processed_texts/        # Extracted text from clean_text_cvs
-│   ├── scanned_cvs_text/       # OCR-extracted text from scanned_cvs
+│   ├── processed_texts/        # Normalized text extracted from clean_text_cvs
+│   ├── scanned_cvs_text/       # Normalized OCR-extracted text from scanned_cvs
 │   ├── structured_json_from_text/   # Structured JSONs from processed_texts
 │   ├── structured_json_scanned/     # Structured JSONs from scanned_cvs_text
 │   ├── json_fields/            # Unified structured JSONs with job role detection
@@ -43,25 +43,28 @@ Pipeline Workflow
 - Script: move_scanned_cvs.py  
   - Moves scanned PDFs (as identified in the log) to data/scanned_cvs/.
 
-4. Text Extraction
+4. Text Extraction & Normalization
 
 - Script: extract_text_from_textbased.py  
   - Extracts text from each PDF in clean_text_cvs/ using PyMuPDF.
-  - Saves the extracted text as .txt files in processed_texts/.
+  - Normalizes the extracted text (lowercase, accents removed, whitespace stripped).
+  - Saves the normalized text as .txt files in processed_texts/.
 - Script: ocr_sanned_cvs.py  
   - Applies OCR (using pytesseract) to each file in scanned_cvs/ (PDFs and images).
   - Converts PDFs to images, then extracts text.
-  - Saves the extracted text as .txt files in scanned_cvs_text/.
+  - Normalizes the extracted text (lowercase, accents removed, whitespace stripped).
+  - Saves the normalized text as .txt files in scanned_cvs_text/.
+  - Gracefully skips and logs corrupted or unreadable PDFs instead of crashing.
 
 5. Information Extraction & Structuring
 
 - Script: extract_cvs_fields.py
 - What it does:  
-  - Processes all .txt files from both processed_texts/ and scanned_cvs_text/.
+  - Processes all normalized .txt files from both processed_texts/ and scanned_cvs_text/.
   - Extracts:
     - Email (Gmail)
     - Moroccan phone number
-    - Skills (from a predefined list)
+    - Skills (from a predefined list, using robust normalization and matching)
     - Top keywords (most frequent skills)
     - Job role detection:  
       - Flags if the CV is for an "ingenieur" or "technicien" (using lemmatization and frequency analysis)
@@ -76,14 +79,29 @@ Pipeline Workflow
   - If found, adds idFreelancer, fName, and lName to the JSON.
   - Outputs the enriched JSON in enriched_json/, preserving a consistent field order.
 
+7. Additional Enrichment: Evaluations, Decoded Notice, Package Offers, and Report
+
+- Script: add_evaluations_to_enriched_json.py
+  - Adds evaluation data from the freelancer evaluations database to each enriched JSON.
+- Script: add_decoded_notice_to_enriched_json.py
+  - Decodes and adds notice information to each enriched JSON.
+- Script: add_packages_offers_to_enriched_json.py
+  - Adds package offers data to each enriched JSON.
+- Script: add_report_to_enriched_json.py
+  - Adds report information to each enriched JSON.
+
+Each of these scripts reads the JSONs in enriched_json/, augments them with the respective data, and saves the updated JSONs back to the same directory. Logs for each step are saved in the logs/ directory.
+
 Key Features & Technologies
 
 - Text Extraction: PyMuPDF for PDFs, pytesseract for OCR.
+- Text Normalization: All extracted texts are lowercased, accents removed, and whitespace stripped for consistency.
 - NLP: spaCy for tokenization, lemmatization, and keyword extraction.
 - Regex: For email and phone extraction.
+- Skill Extraction: Robust normalization and matching for skills, resilient to OCR/text variations.
 - Job Role Detection: Frequency and lemmatization-based detection for "ingenieur" and "technicien".
 - Database Enrichment: MySQL connector for adding freelancer info.
-- Logging: Each step logs its process and errors for traceability.
+- Logging: Each step logs its process and errors for traceability. Corrupted/unreadable PDFs are logged and skipped.
 - Modular Design: Each step is a separate script, making the pipeline easy to maintain and extend.
 
 How to Use the Pipeline
@@ -97,9 +115,13 @@ How to Use the Pipeline
     5. ocr_sanned_cvs.py
     6. extract_cvs_fields.py
     7. enrich_json_with_info.py
+    8. add_evaluations_to_enriched_json.py
+    9. add_decoded_notice_to_enriched_json.py
+    10. add_packages_offers_to_enriched_json.py
+    11. add_report_to_enriched_json.py
 3. Check logs in the logs/ directory for progress and errors.
 4. Final structured and enriched data will be in data/enriched_json/.
 
 Summary
 
-This pipeline provides a robust, automated solution for processing large volumes of CVs, extracting structured information, detecting job roles, and enriching the data with database information. It is modular, well-logged, and designed for easy extension or adaptation to new requirements.
+This pipeline provides a robust, automated solution for processing large volumes of CVs, extracting structured information, detecting job roles, and enriching the data with database information, evaluations, decoded notices, package offers, and reports. It is modular, well-logged, and designed for easy extension or adaptation to new requirements.
