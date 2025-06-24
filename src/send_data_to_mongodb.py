@@ -27,7 +27,7 @@ from pymongo import MongoClient
 
 MONGODB_URI = "mongodb://localhost:27017/"
 DB_NAME = "Freelancer_AI_database"
-COLLECTION_NAME = "profiles_from_mysql_v2"
+COLLECTION_NAME = "profiles_from_mysql_v3"
 
 # Setup logging
 LOGS_DIR = Path("logs")
