@@ -45,7 +45,9 @@ def extract_profile_text(profile):
         profile_type = "Freelancer profile type not specified."
 
     # Combine everything into final text
+    id_freelancer = profile.get('idFreelancer', 'N/A')
     final_text = (
+        f"idFreelancer: {id_freelancer}. "
         f"{name}. "
         f"Skills: {skills}. "
         f"Top keywords: {top_keywords}. "
@@ -60,5 +62,10 @@ texts = [extract_profile_text(p) for p in profiles]
 
 # Optional: Preview a few results
 print("\n--- Preview ---\n")
-for i, t in enumerate(texts[:3]):
-    print(f"Profile {i+1}:\n{t}\n")
+for i, profile in enumerate(profiles[:3]):
+    id_freelancer = profile.get('idFreelancer', 'N/A')
+    f_name = profile.get('fName', '') or ''
+    l_name = profile.get('lName', '') or ''
+    name = f"{f_name} {l_name}".strip() or "Unnamed Freelancer"
+    text = extract_profile_text(profile)
+    print(f"Profile {i+1} (idFreelancer: {id_freelancer}, Name: {name}):\n{text}\n")
