@@ -27,7 +27,8 @@ def query_top_profiles(query, model, index, texts, top_k=4):
     return results
 
 # Example user query
-user_query = "I want to find a freelancer to create a logo who has expertise in design and photoshop."
+user_query = "I am looking for a freelancer who has a good expertise in data science ."
+
 # Search top 4 matches
 top_profiles = query_top_profiles(user_query, model, index, texts, top_k=4)
 
