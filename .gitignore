@@ -1,5 +1,5 @@
-# Ignore everything inside data/ and logs/
-data/
-#logs/
-requirements.txt
 myenv/
+__pycache__/
+*.pyc
+data/
+logs/
