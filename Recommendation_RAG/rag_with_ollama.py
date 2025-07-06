@@ -5,12 +5,20 @@ from langchain.chains import RetrievalQA
 from langchain.callbacks import LangChainTracer
 from langchain.prompts import PromptTemplate
 
+from rich.console import Console
+from rich.panel import Panel
+from rich.prompt import Prompt
+from rich import box
+from time import time
 
 
-#LangSmith Tracer setup
+# ───── Setup rich console ─────
+console = Console()
+
+# ───── LangSmith Tracer ─────
 tracer = LangChainTracer(project_name="Freelancer-RAG")
 
-# Load embeddings wrapper 
+# ───── Load embeddings and FAISS vectorstore ─────
 embedding_model = HuggingFaceEmbeddings(model_name="sentence-transformers/all-MiniLM-L6-v2")
 vectorstore = FAISS.load_local(
     "Recommendation_RAG/rag_data",
@@ -19,13 +27,12 @@ vectorstore = FAISS.load_local(
     index_name="freelancer_index"
 )
 
-
-# ───── Set up Ollama LLM with mistral ─────
+# ───── Set up Ollama LLM with Mistral ─────
 llm = Ollama(model="mistral", temperature=0.3)
 
-# ───── Define prompt template ─────
+# ───── Define custom prompt template ─────
 prompt_template = PromptTemplate.from_template("""
-    You are an expert AI recruiter assistant. Your job is to recommend the best freelancers based on the client request using the provided context.
+You are an expert AI recruiter assistant. Your job is to recommend the best freelancers based on the client request using the provided context.
 
 Context:
 {context}
@@ -33,12 +40,10 @@ Context:
 Client Query:
 {question}
 
-Answer in a clear, confident tone. Recommend the top 1-3 freelancers and justify your choices based on the context.
+Answer in a clear, confident tone. Recommend the top 1–3 freelancers and justify your choices based on the context.
 """)
 
-
-
-# ───── LangChain QA Retrieval with LLM ─────
+# ───── Create the Retrieval QA chain ─────
 qa_chain = RetrievalQA.from_chain_type(
     llm=llm,
     chain_type="stuff",
@@ -47,17 +52,29 @@ qa_chain = RetrievalQA.from_chain_type(
     return_source_documents=True    
 )
 
-# ───── Ask a client query ─────
-query = input("📝 Enter a client request: ").strip()
+# ───── Input from user ─────
+query = Prompt.ask("📝 [bold blue]Enter a client request[/bold blue]")
 
-# ───── Run RAG chain ─────
-result = qa_chain(query, callbacks=[tracer])
+# ───── Start processing timer and loading animation ─────
+start = time()
 
-# ───── Output ─────
-print("\n🧠 Recommendation from LLM:\n")
-print(result["result"])
+with console.status("[bold green]Searching for the best freelancers...[/bold green]", spinner="bouncingBar"):
+    result = qa_chain(query, callbacks=[tracer])
 
-print("\n📚 Retrieved freelancer contexts:\n")
-for doc in result["source_documents"]:
-    print("-----")
-    print(doc.page_content)
+end = time()
+duration = round(end - start, 2)
+
+# ───── Display the recommendation ─────
+console.print(Panel.fit(
+    f"[bold green]{result['result']}[/bold green]",
+    title="🧠 Recommendation",
+    border_style="green",
+    box=box.ROUNDED
+))
+
+console.print(f"\n⏱️ [dim]Processed in {duration} seconds[/dim]")
+
+# ───── Display retrieved context chunks ─────
+console.print("\n📚 [bold underline]Retrieved Freelancer Contexts:[/bold underline]")
+for i, doc in enumerate(result["source_documents"], 1):
+    console.print(Panel(doc.page_content, title=f"📄 Context {i}", box=box.SQUARE, border_style="cyan"))
