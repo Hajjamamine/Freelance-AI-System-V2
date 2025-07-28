@@ -1,3 +1,6 @@
+
+import os
+from dotenv import load_dotenv
 from langchain_community.embeddings import HuggingFaceEmbeddings
 from langchain_community.vectorstores import FAISS
 from langchain_community.llms import Ollama
@@ -10,6 +13,13 @@ from rich.panel import Panel
 from rich.prompt import Prompt
 from rich import box
 from time import time
+
+# Load .env from project root
+load_dotenv()
+
+# Optional: confirm
+if "LANGCHAIN_API_KEY" not in os.environ:
+    raise EnvironmentError("❌ LANGCHAIN_API_KEY not found in environment or .env")
 
 
 # ───── Setup rich console ─────
